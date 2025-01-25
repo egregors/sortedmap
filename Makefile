@@ -15,6 +15,10 @@ lint: ## Lint the files
 test: ## Run unittests
 	@go test -short ${PKG_LIST} -count=1
 
+.PHONY: bench
+bench: ## Run benchmarks
+	@go test -bench=. ${PKG_LIST}
+
 ## Help
 
 .PHONY: help

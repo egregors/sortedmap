@@ -1,8 +1,8 @@
 package sortedmap
 
 type KV[K comparable, V any] struct {
-	key K
-	val V
+	Key K
+	Val V
 }
 
 type kvHeap[K comparable, V any] struct {

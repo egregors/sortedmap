@@ -1,12 +1,22 @@
-# sortedmap
+# 📚 sortedmap
 
 `sortedmap` provides an effective sorted map implementation for Go.
-Below you will find information about the repository, its usage, and the API with complexity details.
+It uses a heap to maintain order and iterators under the hood.
+
+---
+
+[![Build Status](https://github.com/egregors/sortedmap/workflows/build/badge.svg)](https://github.com/egregors/sortedmap/actions)
+[![Go Report Card](https://goreportcard.com/badge/github.com/egregors/sortedmap)](https://goreportcard.com/report/github.com/egregors/sortedmap)
+[![Coverage Status](https://coveralls.io/repos/github/egregors/sortedmap/badge.svg?branch=main)](https://coveralls.io/github/egregors/sortedmap?branch=main)
+[![godoc](https://godoc.org/github.com/egregors/sortedmap?status.svg)](https://godoc.org/github.com/egregors/sortedmap)
+
 
 ## Features
 
 * 🚀 Efficient sorted map implementation
 * 🔧 Customizable sorting by key or value
+* 🐈 Zero dependencies 
+* 📦 Easy to use API (inspired by the stdlib `maps` and `slices` packages)
 
 ## Installation
 
@@ -26,39 +36,100 @@ package main
 import (
 	"fmt"
 
-	"github.com/egregors/sortedmap"
+	sm "github.com/egregors/sortedmap"
 )
 
+type Person struct {
+	Name string
+	Age  int
+}
+
 func main() {
-	sm := sortedmap.NewFromMap(map[string]int{
-		"Bob":     42,
-		"Alice":   30,
-		"Charlie": 25,
-	}, func(i, j sortedmap.KV[string, int]) bool {
-		return i.key < j.key
+	// Create a new map sorted by keys
+	m := sm.NewFromMap(map[string]int{
+		"Bob":   31,
+		"Alice": 26,
+		"Eve":   84,
+	}, func(i, j sm.KV[string, int]) bool {
+		return i.Key < j.Key
 	})
 
-	fmt.Println(sm.Collect())
+	fmt.Println(m.Collect())
+	// Output: map[Alice:26 Bob:31 Eve:84]
+
+	m.Insert("Charlie", 34)
+	fmt.Println(m.Collect())
+	// Output: map[Alice:26 Bob:31 Charlie:34 Eve:84]
+
+	m.Delete("Bob")
+	fmt.Println(m.Collect())
+	// Output: map[Alice:26 Charlie:34 Eve:84]
+
+	// Create a new map sorted by values
+	m2 := sm.NewFromMap(map[string]Person{
+		"Bob":   {"Bob", 31},
+		"Alice": {"Alice", 26},
+		"Eve":   {"Eve", 84},
+	}, func(i, j sm.KV[string, Person]) bool {
+		return i.Val.Age < j.Val.Age
+	})
+
+	fmt.Println(m2.Collect())
+	// Output: map[Alice:{Alice 26} Bob:{Bob 31} Eve:{Eve 84}]
+
+	// Create a new map sorted by values but if the values are equal, sort by keys
+	m3 := sm.NewFromMap(map[string]Person{
+		"Bob":   {"Bob", 26},
+		"Alice": {"Alice", 26},
+		"Eve":   {"Eve", 84},
+	}, func(i, j sm.KV[string, Person]) bool {
+		if i.Val.Age == j.Val.Age {
+			return i.Key < j.Key
+		}
+
+		return i.Val.Age < j.Val.Age
+	})
+
+	fmt.Println(m3.Collect())
+	// Output: map[Alice:{Alice 26} Bob:{Bob 26} Eve:{Eve 84}]
 }
+
 ```
 
 ## API and Complexity
 
-| Method       | Description                                                             | Complexity |
-|--------------|-------------------------------------------------------------------------|------------|
-| `New`        | Creates a new `SortedMap` with a custom comparison function             | O(1)       |
-| `NewFromMap` | Creates a new `SortedMap` from an existing map with a custom comparison | O(n log n) |
-| `Get`        | Retrieves the value associated with a key                               | O(1)       |
-| `Delete`     | Removes a key-value pair from the map                                   | O(n)       |
-| `All`        | Returns a sequence of all key-value pairs in the map                    | O(n log n) |
-| `Keys`       | Returns a sequence of all keys in the map                               | O(n log n) |
-| `Values`     | Returns a sequence of all values in the map                             | O(n log n) |
-| `Insert`     | Adds or updates a key-value pair in the map                             | O(log n)   |
-| `Collect`    | Returns a map with the same contents as the `SortedMap`                 | O(n log n) |
+| Method       | Description                                                      | Complexity |
+|--------------|------------------------------------------------------------------|------------|
+| `New`        | Creates a new `SortedMap` with a comparison function             | O(1)       |
+| `NewFromMap` | Creates a new `SortedMap` from an existing map with a comparison | O(n log n) |
+| `Get`        | Retrieves the value associated with a key                        | O(1)       |
+| `Delete`     | Removes a key-value pair from the map                            | O(n)       |
+| `All`        | Returns a sequence of all key-value pairs in the map             | O(n log n) |
+| `Keys`       | Returns a sequence of all keys in the map                        | O(n log n) |
+| `Values`     | Returns a sequence of all values in the map                      | O(n log n) |
+| `Insert`     | Adds or updates a key-value pair in the map                      | O(log n)   |
+| `Collect`    | Returns a map with the same contents as the `SortedMap`          | O(n log n) |
 
-## Contributing
+## Benchmarks
 
-We welcome contributions! Please see the `CONTRIBUTING.md` file for guidelines on how to contribute to this project.
+```shell
+goos: darwin
+goarch: arm64
+pkg: github.com/egregors/sortedmap
+cpu: Apple M1 Max
+BenchmarkNew-10                         165633163            7.143 ns/op
+BenchmarkNewFromMap-10                  406633                2806 ns/op
+BenchmarkSortedMap_Get-10               154206174            7.849 ns/op
+BenchmarkSortedMap_All-10               1000000000          0.3153 ns/op
+BenchmarkSortedMap_Collect-10           627693                1929 ns/op
+BenchmarkSortedMap_Keys-10              1000000000          0.3150 ns/op
+BenchmarkSortedMap_Values-10            1000000000          0.3233 ns/op
+BenchmarkSortedMap_Insert-10            6625201              182.0 ns/op
+BenchmarkSortedMap_Delete-10            3301149              373.4 ns/op
+PASS
+
+```
+
 
 ## License
 

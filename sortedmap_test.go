@@ -4,11 +4,31 @@ import (
 	"reflect"
 	"slices"
 	"testing"
-
-	"github.com/egregors/sortedmap/ptr"
-
-	"github.com/stretchr/testify/assert"
 )
+
+func ptrTo[T any](v T) *T {
+	return &v
+}
+
+func ptrVal[T any](v *T) T {
+	if v == nil {
+		return *new(T)
+	}
+
+	return *v
+}
+
+func panicsWithValue(t *testing.T, expected interface{}, fn func()) {
+	t.Helper()
+	defer func() {
+		if r := recover(); r == nil {
+			t.Errorf("Expected panic with value %v, but no panic occurred", expected)
+		} else if r != expected {
+			t.Errorf("Expected panic with value %v, but got %v", expected, r)
+		}
+	}()
+	fn()
+}
 
 func TestNewFromMap(t *testing.T) {
 	type args[Map interface{ ~map[K]V }, K comparable, V any] struct {
@@ -24,7 +44,7 @@ func TestNewFromMap(t *testing.T) {
 		{
 			name: "empty map",
 			args: args[map[string]int, string, int]{m: map[string]int{}, less: func(i, j KV[string, int]) bool {
-				return i.key < j.key
+				return i.Key < j.Key
 			}},
 			want: map[string]int{},
 		},
@@ -35,7 +55,7 @@ func TestNewFromMap(t *testing.T) {
 				"Alice":   30,
 				"Charlie": 25,
 			}, less: func(i, j KV[string, int]) bool {
-				return i.key < j.key
+				return i.Key < j.Key
 			}},
 			want: map[string]int{
 				"Alice":   30,
@@ -51,7 +71,7 @@ func TestNewFromMap(t *testing.T) {
 				"Charlie": 25,
 			},
 				less: func(i, j KV[string, int]) bool {
-					return i.key > j.key
+					return i.Key > j.Key
 				},
 			},
 			want: map[string]int{
@@ -68,7 +88,7 @@ func TestNewFromMap(t *testing.T) {
 				"Charlie": 25,
 			},
 				less: func(i, j KV[string, int]) bool {
-					return i.val < j.val
+					return i.Val < j.Val
 				},
 			},
 			want: map[string]int{
@@ -85,7 +105,7 @@ func TestNewFromMap(t *testing.T) {
 				"Alice":   30,
 			},
 				less: func(i, j KV[string, int]) bool {
-					return i.val > j.val
+					return i.Val > j.Val
 				},
 			},
 			want: map[string]int{
@@ -118,7 +138,7 @@ func TestNew(t *testing.T) {
 		{
 			name: "empty map",
 			args: args[string, int]{less: func(i, j KV[string, int]) bool {
-				return i.key < j.key
+				return i.Key < j.Key
 			}},
 			want: map[string]int{},
 		},
@@ -132,7 +152,7 @@ func TestNew(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if tt.shouldPanic {
-				assert.PanicsWithValue(t, "less function is required", func() {
+				panicsWithValue(t, "less function is required", func() {
 					New[map[string]int, string, int](tt.args.less)
 				})
 
@@ -157,7 +177,7 @@ func TestSortedMap_Get(t *testing.T) {
 		{
 			name: "empty map",
 			sm: NewFromMap(map[string]int{}, func(i, j KV[string, int]) bool {
-				return i.key < j.key
+				return i.Key < j.Key
 			}),
 			key:   "Berik the Cat",
 			want:  0,
@@ -170,7 +190,7 @@ func TestSortedMap_Get(t *testing.T) {
 				"Alice":   30,
 				"Charlie": 25,
 			}, func(i, j KV[string, int]) bool {
-				return i.key < j.key
+				return i.Key < j.Key
 			}),
 			key:   "Alice",
 			want:  30,
@@ -183,7 +203,7 @@ func TestSortedMap_Get(t *testing.T) {
 				"Alice":   30,
 				"Charlie": 25,
 			}, func(i, j KV[string, int]) bool {
-				return i.key < j.key
+				return i.Key < j.Key
 			}),
 			key:   "I've been waiting for you all this time",
 			want:  0,
@@ -193,8 +213,12 @@ func TestSortedMap_Get(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got, got1 := tt.sm.Get(tt.key)
-			assert.Equalf(t, tt.want, got, "Get(%v)", tt.key)
-			assert.Equalf(t, tt.want1, got1, "Get(%v)", tt.key)
+			if got != tt.want {
+				t.Errorf("Get(%v) = %v, want %v", tt.key, got, tt.want)
+			}
+			if got1 != tt.want1 {
+				t.Errorf("Get(%v) = %v, want %v", tt.key, got1, tt.want1)
+			}
 		})
 	}
 }
@@ -216,14 +240,14 @@ func TestSortedMap_Delete(t *testing.T) {
 				"Alice":   30,
 				"Charlie": 25,
 			}, func(i, j KV[string, int]) bool {
-				return i.key < j.key
+				return i.Key < j.Key
 			}),
 			key: "Bob",
 			want: map[string]int{
 				"Alice":   30,
 				"Charlie": 25,
 			},
-			want1: ptr.To(42),
+			want1: ptrTo(42),
 			want2: true,
 		},
 		{
@@ -233,7 +257,7 @@ func TestSortedMap_Delete(t *testing.T) {
 				"Alice":   30,
 				"Charlie": 25,
 			}, func(i, j KV[string, int]) bool {
-				return i.key < j.key
+				return i.Key < j.Key
 			}),
 			want: map[string]int{
 				"Alice":   30,
@@ -247,9 +271,15 @@ func TestSortedMap_Delete(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			delVal, ok := tt.sm.Delete(tt.key)
-			assert.Equalf(t, tt.want1, delVal, "Delete(%v)", tt.key)
-			assert.Equalf(t, tt.want2, ok, "Delete(%v)", tt.key)
-			assert.Equalf(t, tt.want, tt.sm.Collect(), "Delete(%v)", tt.key)
+			if ptrVal(delVal) != ptrVal(tt.want1) {
+				t.Errorf("Delete(%v) = %v, want %v", tt.key, delVal, tt.want1)
+			}
+			if ok != tt.want2 {
+				t.Errorf("Delete(%v) = %v, want %v", tt.key, ok, tt.want2)
+			}
+			if got := tt.sm.Collect(); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Delete(%v) = %v, want %v", tt.key, got, tt.want)
+			}
 		})
 	}
 }
@@ -273,7 +303,7 @@ func TestSortedMap_All(t *testing.T) {
 				"Alice":   30,
 				"Charlie": 25,
 			}, func(i, j KV[string, int]) bool {
-				return i.key < j.key
+				return i.Key < j.Key
 			}),
 			want: map[string]int{
 				"Alice":   30,
@@ -288,7 +318,9 @@ func TestSortedMap_All(t *testing.T) {
 			for k, v := range tt.sm.All() {
 				m[k] = v
 			}
-			assert.Equalf(t, tt.want, m, "All()")
+			if !reflect.DeepEqual(m, tt.want) {
+				t.Errorf("All() = %v, want %v", m, tt.want)
+			}
 		})
 	}
 }
@@ -312,7 +344,7 @@ func TestSortedMap_Keys(t *testing.T) {
 				"Alice":   30,
 				"Charlie": 25,
 			}, func(i, j KV[string, int]) bool {
-				return i.key < j.key
+				return i.Key < j.Key
 			}),
 			want: []string{"Alice", "Bob", "Charlie"},
 		},
@@ -323,7 +355,7 @@ func TestSortedMap_Keys(t *testing.T) {
 				"Alice":   30,
 				"Charlie": 25,
 			}, func(i, j KV[string, int]) bool {
-				return i.key > j.key
+				return i.Key > j.Key
 			}),
 			want: []string{"Charlie", "Bob", "Alice"},
 		},
@@ -331,7 +363,9 @@ func TestSortedMap_Keys(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			keys := slices.Collect(tt.sm.Keys())
-			assert.Equalf(t, tt.want, keys, "Keys()")
+			if !reflect.DeepEqual(keys, tt.want) {
+				t.Errorf("Keys() = %v, want %v", keys, tt.want)
+			}
 		})
 	}
 }
@@ -355,14 +389,16 @@ func TestSortedMap_Values(t *testing.T) {
 				"Alice":   30,
 				"Charlie": 25,
 			}, func(i, j KV[string, int]) bool {
-				return i.key < j.key
+				return i.Key < j.Key
 			}),
 			want: []int{30, 42, 25},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			assert.Equalf(t, tt.want, slices.Collect(tt.sm.Values()), "Values()")
+			if got := slices.Collect(tt.sm.Values()); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Values() = %v, want %v", got, tt.want)
+			}
 		})
 	}
 }
@@ -382,7 +418,7 @@ func TestSortedMap_Insert(t *testing.T) {
 		{
 			name: "empty map",
 			sm: New[map[string]int, string, int](func(i, j KV[string, int]) bool {
-				return i.key < j.key
+				return i.Key < j.Key
 			}),
 			args: args[string, int]{key: "Alice", val: 30},
 			want: map[string]int{
@@ -396,13 +432,14 @@ func TestSortedMap_Insert(t *testing.T) {
 				"Alice": 30,
 				"David": 35,
 			}, func(i, j KV[string, int]) bool {
-				return i.key < j.key
+				return i.Key < j.Key
 			}),
 			args: args[string, int]{key: "Charlie", val: 25},
 			want: map[string]int{
 				"Alice":   30,
 				"Bob":     42,
 				"Charlie": 25,
+				"David":   35,
 			},
 		},
 		{
@@ -412,7 +449,7 @@ func TestSortedMap_Insert(t *testing.T) {
 				"Alice":   30,
 				"Charlie": 25,
 			}, func(i, j KV[string, int]) bool {
-				return i.key < j.key
+				return i.Key < j.Key
 			}),
 			args: args[string, int]{key: "Alice", val: 35},
 			want: map[string]int{
@@ -425,6 +462,9 @@ func TestSortedMap_Insert(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.sm.Insert(tt.args.key, tt.args.val)
+			if got := tt.sm.Collect(); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Insert(%v, %v) = %v, want %v", tt.args.key, tt.args.val, got, tt.want)
+			}
 		})
 	}
 }
@@ -448,7 +488,7 @@ func TestSortedMap_Collect(t *testing.T) {
 				"Alice":   30,
 				"Charlie": 25,
 			}, func(i, j KV[string, int]) bool {
-				return i.key < j.key
+				return i.Key < j.Key
 			}),
 			want: map[string]int{
 				"Alice":   30,
@@ -459,7 +499,109 @@ func TestSortedMap_Collect(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			assert.Equalf(t, tt.want, tt.sm.Collect(), "Collect()")
+			if got := tt.sm.Collect(); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Collect() = %v, want %v", got, tt.want)
+			}
 		})
+	}
+}
+
+var benchMap = map[string]int{
+	"Alice":   30,
+	"Bob":     42,
+	"Charlie": 25,
+	"David":   35,
+	"Eve":     20,
+	"Frank":   40,
+	"Grace":   45,
+	"Heidi":   50,
+	"Ivan":    55,
+	"Judy":    60,
+	"Kevin":   65,
+	"Lucy":    70,
+	"Mary":    75,
+	"Nancy":   80,
+	"Oliver":  85,
+	"Peter":   90,
+	"Quincy":  95,
+	"Roger":   100,
+}
+
+func BenchmarkNew(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		New[map[int]int, int, int](func(i, j KV[int, int]) bool {
+			return i.Key < j.Key
+		})
+	}
+}
+
+func BenchmarkNewFromMap(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		NewFromMap(benchMap, func(i, j KV[string, int]) bool {
+			return i.Key < j.Key
+		})
+	}
+}
+
+func BenchmarkSortedMap_Get(b *testing.B) {
+	sm := NewFromMap(benchMap, func(i, j KV[string, int]) bool {
+		return i.Key < j.Key
+	})
+	for i := 0; i < b.N; i++ {
+		sm.Get("Roger")
+	}
+}
+
+func BenchmarkSortedMap_All(b *testing.B) {
+	sm := NewFromMap(benchMap, func(i, j KV[string, int]) bool {
+		return i.Key < j.Key
+	})
+	for i := 0; i < b.N; i++ {
+		sm.All()
+	}
+}
+
+func BenchmarkSortedMap_Collect(b *testing.B) {
+	sm := NewFromMap(benchMap, func(i, j KV[string, int]) bool {
+		return i.Key < j.Key
+	})
+	for i := 0; i < b.N; i++ {
+		sm.Collect()
+	}
+}
+
+func BenchmarkSortedMap_Keys(b *testing.B) {
+	sm := NewFromMap(benchMap, func(i, j KV[string, int]) bool {
+		return i.Key < j.Key
+	})
+	for i := 0; i < b.N; i++ {
+		sm.Keys()
+	}
+}
+
+func BenchmarkSortedMap_Values(b *testing.B) {
+	sm := NewFromMap(benchMap, func(i, j KV[string, int]) bool {
+		return i.Key < j.Key
+	})
+	for i := 0; i < b.N; i++ {
+		sm.Values()
+	}
+}
+
+func BenchmarkSortedMap_Insert(b *testing.B) {
+	sm := NewFromMap(benchMap, func(i, j KV[string, int]) bool {
+		return i.Key < j.Key
+	})
+	for i := 0; i < b.N; i++ {
+		sm.Insert("Berik", 42)
+	}
+}
+
+func BenchmarkSortedMap_Delete(b *testing.B) {
+	sm := NewFromMap(benchMap, func(i, j KV[string, int]) bool {
+		return i.Key < j.Key
+	})
+	for i := 0; i < b.N; i++ {
+		sm.Delete("Bob")
 	}
 }

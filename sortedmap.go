@@ -49,12 +49,12 @@ func (sm *SortedMap[Map, K, V]) Get(key K) (V, bool) {
 // The complexity is O(n) where n = len(sm.h.xs)
 func (sm *SortedMap[Map, K, V]) Delete(key K) (val *V, existed bool) {
 	delete(sm.m, key)
-	// TODO: to remove the element from the heap, we need to full scan it with O(n) complexity.
+	// TODO: in order to remove the element from the heap, we need to full scan it with O(n).
 	// 	probably we can use a map to store the index of the element in the heap, but the problem
-	//  is that elements indexes will constantly change as we remove or add elements.
+	//  is that element indexes will constantly change as we remove or add elements.
 	for i, el := range sm.h.xs {
-		if el.key == key {
-			val = &el.val
+		if el.Key == key {
+			val = &el.Val
 			heap.Remove(sm.h, i)
 
 			return val, true
@@ -70,7 +70,7 @@ func (sm *SortedMap[Map, K, V]) All() iter.Seq2[K, V] {
 		tempHeap := *sm.h
 		for tempHeap.Len() > 0 {
 			el := heap.Pop(&tempHeap).(KV[K, V])
-			if !yield(el.key, el.val) {
+			if !yield(el.Key, el.Val) {
 				return
 			}
 		}
@@ -83,7 +83,7 @@ func (sm *SortedMap[Map, K, V]) Keys() iter.Seq[K] {
 		tempHeap := *sm.h
 		for tempHeap.Len() > 0 {
 			el := heap.Pop(&tempHeap).(KV[K, V])
-			if !yield(el.key) {
+			if !yield(el.Key) {
 				return
 			}
 		}
@@ -96,7 +96,7 @@ func (sm *SortedMap[Map, K, V]) Values() iter.Seq[V] {
 		tempHeap := *sm.h
 		for tempHeap.Len() > 0 {
 			el := heap.Pop(&tempHeap).(KV[K, V])
-			if !yield(el.val) {
+			if !yield(el.Val) {
 				return
 			}
 		}
