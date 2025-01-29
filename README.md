@@ -7,7 +7,7 @@ It uses a heap to maintain order and iterators under the hood.
 
 [![Build Status](https://github.com/egregors/sortedmap/workflows/build/badge.svg)](https://github.com/egregors/sortedmap/actions)
 [![Go Report Card](https://goreportcard.com/badge/github.com/egregors/sortedmap)](https://goreportcard.com/report/github.com/egregors/sortedmap)
-[![Coverage Status](https://coveralls.io/repos/github/egregors/sortedmap/badge.svg?branch=main)](https://coveralls.io/github/egregors/sortedmap?branch=main)
+[![Coverage Status](https://coveralls.io/repos/github/egregors/sortedmap/badge.svg)](https://coveralls.io/github/egregors/sortedmap)
 [![godoc](https://godoc.org/github.com/egregors/sortedmap?status.svg)](https://godoc.org/github.com/egregors/sortedmap)
 
 
