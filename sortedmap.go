@@ -121,3 +121,8 @@ func (sm *SortedMap[Map, K, V]) Collect() Map {
 
 	return m
 }
+
+// Len returns length of underlying map
+func (sm *SortedMap[Map, K, V]) Len() int {
+	return len(sm.m)
+}

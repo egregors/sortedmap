@@ -10,12 +10,11 @@ It uses a heap to maintain order and iterators under the hood.
 [![Coverage Status](https://coveralls.io/repos/github/egregors/sortedmap/badge.svg?branch=main)](https://coveralls.io/github/egregors/sortedmap?branch=main)
 [![godoc](https://godoc.org/github.com/egregors/sortedmap?status.svg)](https://godoc.org/github.com/egregors/sortedmap)
 
-
 ## Features
 
 * 🚀 Efficient sorted map implementation
 * 🔧 Customizable sorting by key or value
-* 🐈 Zero dependencies 
+* 🐈 Zero dependencies
 * 📦 Easy to use API (inspired by the stdlib `maps` and `slices` packages)
 
 ## Installation
@@ -109,6 +108,7 @@ func main() {
 | `Values`     | Returns a sequence of all values in the map                      | O(n log n) |
 | `Insert`     | Adds or updates a key-value pair in the map                      | O(log n)   |
 | `Collect`    | Returns a map with the same contents as the `SortedMap`          | O(n log n) |
+| `Len`        | Returns length of underlying map                                 | O(1)       |
 
 ## Benchmarks
 
@@ -129,7 +129,6 @@ BenchmarkSortedMap_Delete-10            3301149              373.4 ns/op
 PASS
 
 ```
-
 
 ## License
 

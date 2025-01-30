@@ -605,3 +605,34 @@ func BenchmarkSortedMap_Delete(b *testing.B) {
 		sm.Delete("Bob")
 	}
 }
+
+func TestSortedMap_Len(t *testing.T) {
+	type testCase[Map interface{ ~map[K]V }, K comparable, V any] struct {
+		name string
+		sm   *SortedMap[Map, K, V]
+		want int
+	}
+	tests := []testCase[map[int]int, int, int]{
+		{
+			name: "empty map",
+			sm: NewFromMap(map[int]int{}, func(i, j KV[int, int]) bool {
+				return i.Val < j.Val
+			}),
+			want: 0,
+		},
+		{
+			name: "map with 5 elements",
+			sm: NewFromMap(map[int]int{1: 1, 2: 2, 3: 3, 4: 4, 5: 5}, func(i, j KV[int, int]) bool {
+				return i.Val < j.Val
+			}),
+			want: 5,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tt.sm.Len(); got != tt.want {
+				t.Errorf("Len() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
