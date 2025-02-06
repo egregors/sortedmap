@@ -1,6 +1,7 @@
 package sortedmap
 
 import (
+	"fmt"
 	"reflect"
 	"slices"
 	"testing"
@@ -124,6 +125,23 @@ func TestNewFromMap(t *testing.T) {
 	}
 }
 
+func ExampleNewFromMap() {
+	sm := NewFromMap(map[string]int{
+		"Bob":     42,
+		"Alice":   30,
+		"Charlie": 25,
+	}, func(i, j KV[string, int]) bool {
+		return i.Key < j.Key
+	})
+	for k, v := range sm.All() {
+		fmt.Println(k, v)
+	}
+	// Output:
+	// Alice 30
+	// Bob 42
+	// Charlie 25
+}
+
 func TestNew(t *testing.T) {
 	type args[K comparable, V any] struct {
 		less func(i, j KV[K, V]) bool
@@ -163,6 +181,20 @@ func TestNew(t *testing.T) {
 			}
 		})
 	}
+}
+
+func ExampleNew() {
+	sm := New[map[string]int, string, int](func(i, j KV[string, int]) bool {
+		return i.Key < j.Key
+	})
+	sm.Insert("Alice", 30)
+	sm.Insert("Bob", 42)
+	for k, v := range sm.All() {
+		fmt.Println(k, v)
+	}
+	// Output:
+	// Alice 30
+	// Bob 42
 }
 
 func TestSortedMap_Get(t *testing.T) {
@@ -221,6 +253,20 @@ func TestSortedMap_Get(t *testing.T) {
 			}
 		})
 	}
+}
+
+func ExampleSortedMap_Get() {
+	sm := NewFromMap(map[string]int{
+		"Bob":     42,
+		"Alice":   30,
+		"Charlie": 25,
+	}, func(i, j KV[string, int]) bool {
+		return i.Key < j.Key
+	})
+	val, ok := sm.Get("Alice")
+	fmt.Println(val, ok)
+	// Output:
+	// 30 true
 }
 
 func TestSortedMap_Delete(t *testing.T) {
@@ -284,6 +330,23 @@ func TestSortedMap_Delete(t *testing.T) {
 	}
 }
 
+func ExampleSortedMap_Delete() {
+	sm := NewFromMap(map[string]int{
+		"Bob":     42,
+		"Alice":   30,
+		"Charlie": 25,
+	}, func(i, j KV[string, int]) bool {
+		return i.Key < j.Key
+	})
+	val, ok := sm.Delete("Alice")
+	fmt.Println(ptrVal(val), ok)
+	val, ok = sm.Delete("Alice")
+	fmt.Println(ptrVal(val), ok)
+	// Output:
+	// 30 true
+	// 0 false
+}
+
 func TestSortedMap_All(t *testing.T) {
 	type testCase[Map interface{ ~map[K]V }, K comparable, V any] struct {
 		name string
@@ -323,6 +386,23 @@ func TestSortedMap_All(t *testing.T) {
 			}
 		})
 	}
+}
+
+func ExampleSortedMap_All() {
+	sm := NewFromMap(map[string]int{
+		"Bob":     42,
+		"Alice":   30,
+		"Charlie": 25,
+	}, func(i, j KV[string, int]) bool {
+		return i.Key < j.Key
+	})
+	for k, v := range sm.All() {
+		fmt.Println(k, v)
+	}
+	// Output:
+	// Alice 30
+	// Bob 42
+	// Charlie 25
 }
 
 func TestSortedMap_Keys(t *testing.T) {
@@ -370,6 +450,23 @@ func TestSortedMap_Keys(t *testing.T) {
 	}
 }
 
+func ExampleSortedMap_Keys() {
+	sm := NewFromMap(map[string]int{
+		"Bob":     42,
+		"Alice":   30,
+		"Charlie": 25,
+	}, func(i, j KV[string, int]) bool {
+		return i.Key < j.Key
+	})
+	for k := range sm.Keys() {
+		fmt.Println(k)
+	}
+	// Output:
+	// Alice
+	// Bob
+	// Charlie
+}
+
 func TestSortedMap_Values(t *testing.T) {
 	type testCase[Map interface{ ~map[K]V }, K comparable, V any] struct {
 		name string
@@ -401,6 +498,23 @@ func TestSortedMap_Values(t *testing.T) {
 			}
 		})
 	}
+}
+
+func ExampleSortedMap_Values() {
+	sm := NewFromMap(map[string]int{
+		"Bob":     42,
+		"Alice":   30,
+		"Charlie": 25,
+	}, func(i, j KV[string, int]) bool {
+		return i.Key < j.Key
+	})
+	for v := range sm.Values() {
+		fmt.Println(v)
+	}
+	// Output:
+	// 30
+	// 42
+	// 25
 }
 
 func TestSortedMap_Insert(t *testing.T) {
@@ -469,6 +583,20 @@ func TestSortedMap_Insert(t *testing.T) {
 	}
 }
 
+func ExampleSortedMap_Insert() {
+	sm := New[map[string]int, string, int](func(i, j KV[string, int]) bool {
+		return i.Key < j.Key
+	})
+	sm.Insert("Alice", 30)
+	sm.Insert("Bob", 42)
+	for k, v := range sm.All() {
+		fmt.Println(k, v)
+	}
+	// Output:
+	// Alice 30
+	// Bob 42
+}
+
 func TestSortedMap_Collect(t *testing.T) {
 	type testCase[Map interface{ ~map[K]V }, K comparable, V any] struct {
 		name string
@@ -504,6 +632,19 @@ func TestSortedMap_Collect(t *testing.T) {
 			}
 		})
 	}
+}
+
+func ExampleSortedMap_Collect() {
+	sm := NewFromMap(map[string]int{
+		"Bob":     42,
+		"Alice":   30,
+		"Charlie": 25,
+	}, func(i, j KV[string, int]) bool {
+		return i.Key < j.Key
+	})
+	fmt.Println(sm.Collect())
+	// Unordered output:
+	// map[Alice:30 Bob:42 Charlie:25]
 }
 
 func TestSortedMap_CollectAll(t *testing.T) {
@@ -547,6 +688,21 @@ func TestSortedMap_CollectAll(t *testing.T) {
 			}
 		})
 	}
+}
+
+func ExampleSortedMap_CollectAll() {
+	sm := NewFromMap(map[int]string{
+		1: "one",
+		3: "three",
+		2: "two",
+		5: "five",
+		4: "four",
+	}, func(i, j KV[int, string]) bool {
+		return i.Key < j.Key
+	})
+	fmt.Println(sm.CollectAll())
+	// Output:
+	// [{1 one} {2 two} {3 three} {4 four} {5 five}]
 }
 
 func TestSortedMap_CollectKeys(t *testing.T) {
@@ -595,6 +751,19 @@ func TestSortedMap_CollectKeys(t *testing.T) {
 	}
 }
 
+func ExampleSortedMap_CollectKeys() {
+	sm := NewFromMap(map[string]int{
+		"Bob":     42,
+		"Alice":   30,
+		"Charlie": 25,
+	}, func(i, j KV[string, int]) bool {
+		return i.Key < j.Key
+	})
+	fmt.Println(sm.CollectKeys())
+	// Output:
+	// [Alice Bob Charlie]
+}
+
 func TestSortedMap_CollectValues(t *testing.T) {
 	type testCase[Map interface{ ~map[K]V }, K comparable, V any] struct {
 		name string
@@ -639,6 +808,19 @@ func TestSortedMap_CollectValues(t *testing.T) {
 			}
 		})
 	}
+}
+
+func ExampleSortedMap_CollectValues() {
+	sm := NewFromMap(map[string]int{
+		"Bob":     42,
+		"Alice":   30,
+		"Charlie": 25,
+	}, func(i, j KV[string, int]) bool {
+		return i.Key < j.Key
+	})
+	fmt.Println(sm.CollectValues())
+	// Output:
+	// [30 42 25]
 }
 
 func TestSortedMap_Len(t *testing.T) {
