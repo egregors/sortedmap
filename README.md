@@ -97,37 +97,38 @@ func main() {
 
 ## API and Complexity
 
-| Method       | Description                                                      | Complexity |
-|--------------|------------------------------------------------------------------|------------|
-| `New`        | Creates a new `SortedMap` with a comparison function             | O(1)       |
-| `NewFromMap` | Creates a new `SortedMap` from an existing map with a comparison | O(n log n) |
-| `Get`        | Retrieves the value associated with a key                        | O(1)       |
-| `Delete`     | Removes a key-value pair from the map                            | O(n)       |
-| `All`        | Returns a sequence of all key-value pairs in the map             | O(n log n) |
-| `Keys`       | Returns a sequence of all keys in the map                        | O(n log n) |
-| `Values`     | Returns a sequence of all values in the map                      | O(n log n) |
-| `Insert`     | Adds or updates a key-value pair in the map                      | O(log n)   |
-| `Collect`    | Returns a map with the same contents as the `SortedMap`          | O(n log n) |
-| `Len`        | Returns length of underlying map                                 | O(1)       |
+| Method          | Description                                                          | Complexity |
+|-----------------|----------------------------------------------------------------------|------------|
+| `New`           | Creates a new `SortedMap` with a comparison function                 | O(1)       |
+| `NewFromMap`    | Creates a new `SortedMap` from an existing map with a comparison     | O(n log n) |
+| `Get`           | Retrieves the value associated with a key                            | O(1)       |
+| `Delete`        | Removes a key-value pair from the map                                | O(n)       |
+| `All`           | Returns a sequence of all key-value pairs in the map                 | O(n log n) |
+| `Keys`          | Returns a sequence of all keys in the map                            | O(n log n) |
+| `Values`        | Returns a sequence of all values in the map                          | O(n log n) |
+| `Insert`        | Adds or updates a key-value pair in the map                          | O(log n)   |
+| `Collect`       | Returns  a regular map with an *unordered* content off the SortedMap | O(n log n) |
+| `CollectAll`    | Returns a slice of key-value pairs                                   | O(n log n) |
+| `CollectKeys`   | Returns a slice of the map’s keys                                    | O(n log n) |
+| `CollectValues` | Returns a slice of the map's values                                  | O(n log n) |
+| `Len`           | Returns length of underlying map                                     | O(1)       |
 
 ## Benchmarks
 
 ```shell
-goos: darwin
-goarch: arm64
-pkg: github.com/egregors/sortedmap
-cpu: Apple M1 Max
-BenchmarkNew-10                         165633163            7.143 ns/op
-BenchmarkNewFromMap-10                  406633                2806 ns/op
-BenchmarkSortedMap_Get-10               154206174            7.849 ns/op
-BenchmarkSortedMap_All-10               1000000000          0.3153 ns/op
-BenchmarkSortedMap_Collect-10           627693                1929 ns/op
-BenchmarkSortedMap_Keys-10              1000000000          0.3150 ns/op
-BenchmarkSortedMap_Values-10            1000000000          0.3233 ns/op
-BenchmarkSortedMap_Insert-10            6625201              182.0 ns/op
-BenchmarkSortedMap_Delete-10            3301149              373.4 ns/op
-PASS
-
+BenchmarkNew-10                         165887913           7.037 ns/op
+BenchmarkNewFromMap-10                  419106              2716 ns/op
+BenchmarkSortedMap_Get-10               191580795           5.327 ns/op
+BenchmarkSortedMap_Delete-10            3328420             365.0 ns/op
+BenchmarkSortedMap_All-10               1000000000          0.3116 ns/op
+BenchmarkSortedMap_Keys-10              1000000000          0.3118 ns/op
+BenchmarkSortedMap_Values-10            1000000000          0.3117 ns/op
+BenchmarkSortedMap_Insert-10            6665839             182.5 ns/op
+BenchmarkSortedMap_Collect-10           649450              1835 ns/op
+BenchmarkSortedMap_CollectAll-10        1237276             972.4 ns/op
+BenchmarkSortedMap_CollectKeys-10       1250041             964.9 ns/op
+BenchmarkSortedMap_CollectValues-10     1294760             927.7 ns/op
+BenchmarkSortedMap_Len-10               1000000000          0.3176 ns/op
 ```
 
 ## License

@@ -64,7 +64,7 @@ func (sm *SortedMap[Map, K, V]) Delete(key K) (val *V, existed bool) {
 	return (*V)(nil), false
 }
 
-// All returns a sequence of key-value pairs in the map
+// All returns a sequence of key-value pairs
 func (sm *SortedMap[Map, K, V]) All() iter.Seq2[K, V] {
 	return func(yield func(K, V) bool) {
 		tempHeap := *sm.h
@@ -77,7 +77,7 @@ func (sm *SortedMap[Map, K, V]) All() iter.Seq2[K, V] {
 	}
 }
 
-// Keys returns a sequence of keys in the map
+// Keys returns a sequence of keys
 func (sm *SortedMap[Map, K, V]) Keys() iter.Seq[K] {
 	return func(yield func(K) bool) {
 		tempHeap := *sm.h
@@ -90,7 +90,7 @@ func (sm *SortedMap[Map, K, V]) Keys() iter.Seq[K] {
 	}
 }
 
-// Values returns a sequence of values in the map
+// Values returns a sequence of values
 func (sm *SortedMap[Map, K, V]) Values() iter.Seq[V] {
 	return func(yield func(V) bool) {
 		tempHeap := *sm.h
@@ -103,7 +103,7 @@ func (sm *SortedMap[Map, K, V]) Values() iter.Seq[V] {
 	}
 }
 
-// Insert adds a key-value pair to the map. If the key already exists, the value is updated.
+// Insert adds a key-value pair to the map. If the key already exists, the value is updated
 func (sm *SortedMap[Map, K, V]) Insert(key K, val V) {
 	if _, exists := sm.m[key]; exists {
 		sm.Delete(key)
@@ -112,7 +112,7 @@ func (sm *SortedMap[Map, K, V]) Insert(key K, val V) {
 	heap.Push(sm.h, KV[K, V]{key, val})
 }
 
-// Collect returns a map with the same contents as the SortedMap
+// Collect returns a regular map with an *unordered* content off the SortedMap
 func (sm *SortedMap[Map, K, V]) Collect() Map {
 	m := make(Map)
 	for key, val := range sm.All() {
@@ -120,6 +120,36 @@ func (sm *SortedMap[Map, K, V]) Collect() Map {
 	}
 
 	return m
+}
+
+// CollectAll returns a slice of key-value pairs
+func (sm *SortedMap[Map, K, V]) CollectAll() []KV[K, V] {
+	pairs := make([]KV[K, V], 0, sm.Len())
+	for k, v := range sm.All() {
+		pairs = append(pairs, KV[K, V]{k, v})
+	}
+
+	return pairs
+}
+
+// CollectKeys returns a slice of the map’s keys
+func (sm *SortedMap[Map, K, V]) CollectKeys() []K {
+	ks := make([]K, 0, sm.Len())
+	for k := range sm.Keys() {
+		ks = append(ks, k)
+	}
+
+	return ks
+}
+
+// CollectValues returns a slice of the map's values
+func (sm *SortedMap[Map, K, V]) CollectValues() []V {
+	vals := make([]V, 0, sm.Len())
+	for val := range sm.Values() {
+		vals = append(vals, val)
+	}
+
+	return vals
 }
 
 // Len returns length of underlying map

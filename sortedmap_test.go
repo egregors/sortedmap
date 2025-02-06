@@ -506,6 +506,172 @@ func TestSortedMap_Collect(t *testing.T) {
 	}
 }
 
+func TestSortedMap_CollectAll(t *testing.T) {
+	type testCase[Map interface{ ~map[K]V }, K comparable, V any] struct {
+		name string
+		sm   *SortedMap[Map, K, V]
+		want []KV[K, V]
+	}
+	tests := []testCase[map[int]string, int, string]{
+		{
+			name: "empty map",
+			sm: NewFromMap(map[int]string{}, func(i, j KV[int, string]) bool {
+				return i.Val < j.Val
+			}),
+			want: []KV[int, string]{},
+		},
+		{
+			name: "map with 5 elements",
+			sm: NewFromMap(map[int]string{
+				1: "one",
+				3: "three",
+				2: "two",
+				5: "five",
+				4: "four",
+			}, func(i, j KV[int, string]) bool {
+				return i.Key < j.Key
+			}),
+			want: []KV[int, string]{
+				{1, "one"},
+				{2, "two"},
+				{3, "three"},
+				{4, "four"},
+				{5, "five"},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tt.sm.CollectAll(); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("CollectAll() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestSortedMap_CollectKeys(t *testing.T) {
+	type testCase[Map interface{ ~map[K]V }, K comparable, V any] struct {
+		name string
+		sm   *SortedMap[Map, K, V]
+		want []K
+	}
+	tests := []testCase[map[string]int, string, int]{
+		{
+			name: "empty map",
+			sm: NewFromMap(map[string]int{}, func(i, j KV[string, int]) bool {
+				return i.Val < j.Val
+			}),
+			want: []string{},
+		},
+		{
+			name: "map with 5 elements sorted by value",
+			sm: NewFromMap(map[string]int{
+				"Bob":     42,
+				"Alice":   30,
+				"Charlie": 25,
+			}, func(i, j KV[string, int]) bool {
+				return i.Val < j.Val
+			}),
+			want: []string{"Charlie", "Alice", "Bob"},
+		},
+		{
+			name: "map with 5 elements sorted by key",
+			sm: NewFromMap(map[string]int{
+				"Bob":     42,
+				"Alice":   30,
+				"Charlie": 25,
+			}, func(i, j KV[string, int]) bool {
+				return i.Key < j.Key
+			}),
+			want: []string{"Alice", "Bob", "Charlie"},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tt.sm.CollectKeys(); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("CollectKeys() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestSortedMap_CollectValues(t *testing.T) {
+	type testCase[Map interface{ ~map[K]V }, K comparable, V any] struct {
+		name string
+		sm   *SortedMap[Map, K, V]
+		want []V
+	}
+	tests := []testCase[map[string]int, string, int]{
+		{
+			name: "empty map",
+			sm: NewFromMap(map[string]int{}, func(i, j KV[string, int]) bool {
+				return i.Val < j.Val
+			}),
+			want: []int{},
+		},
+		{
+			name: "map with 5 elements sorted by value",
+			sm: NewFromMap(map[string]int{
+				"Bob":     42,
+				"Alice":   30,
+				"Charlie": 25,
+			}, func(i, j KV[string, int]) bool {
+				return i.Val < j.Val
+			}),
+			want: []int{25, 30, 42},
+		},
+		{
+			name: "map with 5 elements sorted by key",
+			sm: NewFromMap(map[string]int{
+				"Bob":     42,
+				"Alice":   30,
+				"Charlie": 25,
+			}, func(i, j KV[string, int]) bool {
+				return i.Key < j.Key
+			}),
+			want: []int{30, 42, 25},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tt.sm.CollectValues(); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("CollectValues() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestSortedMap_Len(t *testing.T) {
+	type testCase[Map interface{ ~map[K]V }, K comparable, V any] struct {
+		name string
+		sm   *SortedMap[Map, K, V]
+		want int
+	}
+	tests := []testCase[map[int]int, int, int]{
+		{
+			name: "empty map",
+			sm: NewFromMap(map[int]int{}, func(i, j KV[int, int]) bool {
+				return i.Val < j.Val
+			}),
+			want: 0,
+		},
+		{
+			name: "map with 5 elements",
+			sm: NewFromMap(map[int]int{1: 1, 2: 2, 3: 3, 4: 4, 5: 5}, func(i, j KV[int, int]) bool {
+				return i.Val < j.Val
+			}),
+			want: 5,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tt.sm.Len(); got != tt.want {
+				t.Errorf("Len() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
 var benchMap = map[string]int{
 	"Alice":   30,
 	"Bob":     42,
@@ -552,21 +718,21 @@ func BenchmarkSortedMap_Get(b *testing.B) {
 	}
 }
 
+func BenchmarkSortedMap_Delete(b *testing.B) {
+	sm := NewFromMap(benchMap, func(i, j KV[string, int]) bool {
+		return i.Key < j.Key
+	})
+	for i := 0; i < b.N; i++ {
+		sm.Delete("Bob")
+	}
+}
+
 func BenchmarkSortedMap_All(b *testing.B) {
 	sm := NewFromMap(benchMap, func(i, j KV[string, int]) bool {
 		return i.Key < j.Key
 	})
 	for i := 0; i < b.N; i++ {
 		sm.All()
-	}
-}
-
-func BenchmarkSortedMap_Collect(b *testing.B) {
-	sm := NewFromMap(benchMap, func(i, j KV[string, int]) bool {
-		return i.Key < j.Key
-	})
-	for i := 0; i < b.N; i++ {
-		sm.Collect()
 	}
 }
 
@@ -597,42 +763,47 @@ func BenchmarkSortedMap_Insert(b *testing.B) {
 	}
 }
 
-func BenchmarkSortedMap_Delete(b *testing.B) {
+func BenchmarkSortedMap_Collect(b *testing.B) {
 	sm := NewFromMap(benchMap, func(i, j KV[string, int]) bool {
 		return i.Key < j.Key
 	})
 	for i := 0; i < b.N; i++ {
-		sm.Delete("Bob")
+		sm.Collect()
 	}
 }
 
-func TestSortedMap_Len(t *testing.T) {
-	type testCase[Map interface{ ~map[K]V }, K comparable, V any] struct {
-		name string
-		sm   *SortedMap[Map, K, V]
-		want int
+func BenchmarkSortedMap_CollectAll(b *testing.B) {
+	sm := NewFromMap(benchMap, func(i, j KV[string, int]) bool {
+		return i.Key < j.Key
+	})
+	for i := 0; i < b.N; i++ {
+		sm.CollectAll()
 	}
-	tests := []testCase[map[int]int, int, int]{
-		{
-			name: "empty map",
-			sm: NewFromMap(map[int]int{}, func(i, j KV[int, int]) bool {
-				return i.Val < j.Val
-			}),
-			want: 0,
-		},
-		{
-			name: "map with 5 elements",
-			sm: NewFromMap(map[int]int{1: 1, 2: 2, 3: 3, 4: 4, 5: 5}, func(i, j KV[int, int]) bool {
-				return i.Val < j.Val
-			}),
-			want: 5,
-		},
+}
+
+func BenchmarkSortedMap_CollectKeys(b *testing.B) {
+	sm := NewFromMap(benchMap, func(i, j KV[string, int]) bool {
+		return i.Key < j.Key
+	})
+	for i := 0; i < b.N; i++ {
+		sm.CollectKeys()
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := tt.sm.Len(); got != tt.want {
-				t.Errorf("Len() = %v, want %v", got, tt.want)
-			}
-		})
+}
+
+func BenchmarkSortedMap_CollectValues(b *testing.B) {
+	sm := NewFromMap(benchMap, func(i, j KV[string, int]) bool {
+		return i.Key < j.Key
+	})
+	for i := 0; i < b.N; i++ {
+		sm.CollectValues()
+	}
+}
+
+func BenchmarkSortedMap_Len(b *testing.B) {
+	sm := NewFromMap(benchMap, func(i, j KV[string, int]) bool {
+		return i.Key < j.Key
+	})
+	for i := 0; i < b.N; i++ {
+		sm.Len()
 	}
 }
