@@ -1,5 +1,6 @@
 package sortedmap
 
+// KV is a key-value pair.
 type KV[K comparable, V any] struct {
 	Key K
 	Val V

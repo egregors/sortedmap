@@ -356,7 +356,7 @@ func TestSortedMap_All(t *testing.T) {
 	tests := []testCase[map[string]int, string, int]{
 		{
 			name: "empty map",
-			sm:   New[map[string]int, string, int](func(i, j KV[string, int]) bool { return true }),
+			sm:   New[map[string]int, string, int](func(_, _ KV[string, int]) bool { return true }),
 			want: map[string]int{},
 		},
 		{
@@ -414,7 +414,7 @@ func TestSortedMap_Keys(t *testing.T) {
 	tests := []testCase[map[string]int, string, int]{
 		{
 			name: "empty map",
-			sm:   New[map[string]int, string, int](func(i, j KV[string, int]) bool { return true }),
+			sm:   New[map[string]int, string, int](func(_, _ KV[string, int]) bool { return true }),
 			want: nil,
 		},
 		{
@@ -476,7 +476,7 @@ func TestSortedMap_Values(t *testing.T) {
 	tests := []testCase[map[string]int, string, int]{
 		{
 			name: "empty map",
-			sm:   New[map[string]int, string, int](func(i, j KV[string, int]) bool { return true }),
+			sm:   New[map[string]int, string, int](func(_, _ KV[string, int]) bool { return true }),
 			want: nil,
 		},
 		{
@@ -606,7 +606,7 @@ func TestSortedMap_Collect(t *testing.T) {
 	tests := []testCase[map[string]int, string, int]{
 		{
 			name: "empty map",
-			sm:   New[map[string]int, string, int](func(i, j KV[string, int]) bool { return true }),
+			sm:   New[map[string]int, string, int](func(_, _ KV[string, int]) bool { return true }),
 			want: map[string]int{},
 		},
 		{
