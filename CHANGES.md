@@ -1,6 +1,10 @@
 Changes
 =======
 
+#### ver.: 0.3.1 (26.03.2025)
+
+* 🍻 Move to golangci-lint config v2
+
 #### ver.: 0.3.0 (06.02.2025)
 
 * 🛠️ Add `CollectAll()` method – get slice of key-value pairs
